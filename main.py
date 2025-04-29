@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, session
 from serp_scraper import get_google_data
 import requests
-from config import OPENROUTER_API_KEY
 import os
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24)
