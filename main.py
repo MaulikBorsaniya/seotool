@@ -4,7 +4,7 @@ import requests
 from config import OPENROUTER_API_KEY
 import os
 
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24)
 
 MAX_FREE_USES = 4
@@ -104,5 +104,4 @@ def index():
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=8080, debug=True)
