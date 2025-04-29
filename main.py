@@ -4,7 +4,7 @@ import requests
 from config import OPENROUTER_API_KEY
 import os
 
-app = Flask(__name__, template_folder="../templates")
+app = Flask(__name__, template_folder="templates")
 app.secret_key = os.urandom(24)
 
 MAX_FREE_USES = 4
