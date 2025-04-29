@@ -1,9 +1,13 @@
-# serp_scraper.py (Serper.dev version)
+# === File: serp_scraper.py ===
+
 import requests
-from config import SERPER_API_KEY
+import openai
+from config import SERPER_API_KEY, OPENAI_API_KEY
 
 SERPER_URL = "https://google.serper.dev/search"
 
+# Set OpenAI API Key
+openai.api_key = OPENAI_API_KEY
 
 def get_google_data(keyword):
     headers = {
@@ -43,4 +47,22 @@ def get_google_data(keyword):
         }
 
     except Exception as e:
+        print(f"🔴 Error fetching Google data: {e}")
         return {"ai_overview": "Error fetching data", "featured_snippet": "", "organic": []}
+
+def get_gpt_feedback(prompt):
+    try:
+        print("🟣 Sending prompt to GPT...")
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        feedback = response['choices'][0]['message']['content']
+        print("🟣 GPT Feedback received.")
+        return feedback
+    except Exception as e:
+        print(f"🔴 GPT Feedback Error: {e}")
+        return "Error fetching GPT feedback."
+
