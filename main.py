@@ -9,7 +9,6 @@ app.secret_key = os.urandom(24)
 
 MAX_FREE_USES = 4
 
-
 def generate_feedback(keyword, ai_overview, leak_title, leak_snippet):
     prompt = f'''
 You are an SEO expert. A user searched for: "{keyword}".
@@ -42,26 +41,29 @@ Give me:
     try:
         res = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
         data = res.json()
-        return data["choices"][0]["message"]["content"]
+
+        # ✅ Safe checking
+        if "choices" in data:
+            return data["choices"][0]["message"]["content"]
+        elif "error" in data:
+            return f"❌ GPT API Error: {data['error'].get('message', 'Unknown error')}"
+        else:
+            return "❌ Unexpected GPT API Response."
     except Exception as e:
         return f"❌ GPT Feedback error: {str(e)}"
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     if "uses" not in session:
         session["uses"] = 0
 
-    keyword = ""
-    results = []
-    leak = {}
-    ai_overview = ""
-    feedback = ""
-    error = ""
+    keyword, ai_overview, feedback, error = "", "", "", ""
+    results, leak = [], {}
 
     if request.method == "POST":
         if session["uses"] >= MAX_FREE_USES:
             return render_template("index.html", keyword="", ai_overview="", results=[], leak={}, feedback="",
+                                   uses=session["uses"], max_uses=MAX_FREE_USES,
                                    error="You have used all your free searches. Contact Maulik at borsaniyamaulik@gmail.com to get more.")
 
         keyword = request.form.get("keyword", "").strip()
@@ -70,7 +72,6 @@ def index():
         serp_data = get_google_data(keyword)
         print("🔍 Raw SERP data:", serp_data)
 
-        # Prefer manual overview if provided
         ai_overview = manual_overview if manual_overview else serp_data.get("ai_overview", "No AI Overview found.")
         organic = serp_data.get("organic", [])
 
@@ -99,9 +100,9 @@ def index():
         session["uses"] += 1
 
     return render_template("index.html", keyword=keyword, ai_overview=ai_overview,
-                           results=results, leak=leak, feedback=feedback, uses=session["uses"],
-                           max_uses=MAX_FREE_USES, error=error)
-
+                           results=results, leak=leak, feedback=feedback,
+                           uses=session["uses"], max_uses=MAX_FREE_USES, error=error)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
