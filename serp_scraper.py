@@ -1,6 +1,7 @@
 # serp_scraper.py (Serper.dev version)
 import requests
-from config import SERPER_API_KEY
+# from config import SERPER_API_KEY
+SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 
 SERPER_URL = "https://google.serper.dev/search"
 
