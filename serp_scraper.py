@@ -1,13 +1,10 @@
 # === File: serp_scraper.py ===
 
 import requests
-import openai
-from config import SERPER_API_KEY, OPENAI_API_KEY
+from config import SERPER_API_KEY, OPENROUTER_API_KEY
 
 SERPER_URL = "https://google.serper.dev/search"
-
-# Set OpenAI API Key
-openai.api_key = OPENAI_API_KEY
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 def get_google_data(keyword):
     headers = {
@@ -51,18 +48,28 @@ def get_google_data(keyword):
         return {"ai_overview": "Error fetching data", "featured_snippet": "", "organic": []}
 
 def get_gpt_feedback(prompt):
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "openrouter/openai/gpt-3.5-turbo",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+
     try:
-        print("🟣 Sending prompt to GPT...")
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        feedback = response['choices'][0]['message']['content']
-        print("🟣 GPT Feedback received.")
+        print("🟣 Sending prompt to OpenRouter...")
+        response = requests.post(OPENROUTER_URL, headers=headers, json=payload)
+        print("🟣 OpenRouter Response Code:", response.status_code)
+
+        data = response.json()
+        print("🟣 OpenRouter Raw JSON (trimmed):", str(data)[:300])
+
+        feedback = data['choices'][0]['message']['content']
         return feedback
     except Exception as e:
-        print(f"🔴 GPT Feedback Error: {e}")
+        print(f"🔴 GPT Feedback Error via OpenRouter: {e}")
         return "Error fetching GPT feedback."
-
